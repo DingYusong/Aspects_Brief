@@ -27,11 +27,14 @@
     //3.根据Option调用新方法和老方法
     
     
-    //创建子类
+    //创建子类。本例中 创建一个DYSDog的子类DYSDog_myAspect
     NSString *className = NSStringFromClass([self class]);
 //    NSString *subClassName = [className stringByAppendingString:@"_myAspect"];
 //    Class subClass = objc_getClass(subClassName.UTF8String);
     const char *subClassName = [className stringByAppendingString:@"_myAspect"].UTF8String;
+    
+    //The Class object for the named class, or \c nil
+    //*  if the class is not registered with the Objective-C runtime.
     Class subClass = objc_getClass(subClassName);
 
     
@@ -48,6 +51,8 @@
     
     //获得类,成功创建子类
     Class baseClass = object_getClass(self);
+    //Creates a new class and metaclass.
+    //The new class, or Nil if the class could not be created (for example, the desired name is already in use).
     objc_allocateClassPair(baseClass, subClassName, 0);
 
     /**
