@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "DYSDog.h"
+#import "DYSSimpleAspects.h"
 
 @interface ViewController ()
 
@@ -17,6 +19,14 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    
+    [DYSDog dysAspect_hookSelector:@selector(specie) withOptions:DYSSimpleAspectOptionAfter usingBlock:^(){
+        NSLog(@"爬行的");
+    } error:nil];
+    
+    
+    [DYSDog specie];
 }
 
 @end
