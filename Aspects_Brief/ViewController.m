@@ -21,12 +21,23 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    [DYSDog dysAspect_hookSelector:@selector(specie) withOptions:DYSSimpleAspectOptionAfter usingBlock:^(){
-        NSLog(@"爬行的");
+//    [DYSDog dysAspect_hookSelector:@selector(specie) withOptions:DYSSimpleAspectOptionAfter usingBlock:^(){
+//        NSLog(@"爬行的");
+//    } error:nil];
+//
+//    NSLog(@"类开始---");
+//    [DYSDog specie];
+//    NSLog(@"类结束---");
+    
+    DYSDog *dog = [DYSDog new];
+    
+    [dog dysAspect_hookSelector:@selector(learnRunning) withOptions:DYSSimpleAspectOptionBefore usingBlock:^(){
+        NSLog(@"先学会走");
     } error:nil];
     
-    
-    [DYSDog specie];
+    NSLog(@"对象开始---");
+    [dog learnRunning];
+    NSLog(@"对象结束---");
 }
 
 @end

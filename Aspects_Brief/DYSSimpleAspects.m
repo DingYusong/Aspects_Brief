@@ -8,6 +8,7 @@
 
 #import "DYSSimpleAspects.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
 
 @implementation NSObject (DYSSimpleAspects)
 
@@ -20,14 +21,24 @@
     //3.根据Option调用新方法和老方法
     
     
-    //创建子类。本例中 创建一个DYSDog的子类DYSDog_myAspect
+    //将class DYSDog的selector ： specie 的imp指针指向
+    
+    
+    //1. 动态创建子类。
+    //本例中 动态创建一个DYSDog的子类DYSDog_myAspect
+    
+    //DYSDog
     NSString *className = NSStringFromClass([self class]);
+    
     //    NSString *subClassName = [className stringByAppendingString:@"_myAspect"];
     //    Class subClass = objc_getClass(subClassName.UTF8String);
+    
+    //DYSDog_myAspect
     const char *subClassName = [className stringByAppendingString:@"_myAspect"].UTF8String;
     
     //The Class object for the named class, or \c nil
     //*  if the class is not registered with the Objective-C runtime.
+    //DYSDog_myAspect 目前还是nil
     Class subClass = objc_getClass(subClassName);
     
     
@@ -43,10 +54,18 @@
      */
     
     //获得类,成功创建子类
-    Class baseClass = object_getClass(self);
+    
+    //DYSDog 类对象
+    //Class baseClass = object_getClass(self);
+    //类方法，本身就是类对象
+    
+    //[DYSDog specie]
+//    [self performSelector:selector];
+    
     //Creates a new class and metaclass.
     //The new class, or Nil if the class could not be created (for example, the desired name is already in use).
-    objc_allocateClassPair(baseClass, subClassName, 0);
+    //
+    objc_allocateClassPair(self, subClassName, 0);
     
     /**
      * class_replaceMethod
@@ -78,6 +97,15 @@
     //2.老方法的IMP指针指向新方法。
     //3.根据Option调用新方法和老方法
     
+    /**
+     获得method的imp指针：class_getMethodImplementation
+     Returns the function pointer that would be called if a
+     particular message were sent to an instance of a class.
+     */
+    //获得 selector的imp
+    
+    
+
     
     //创建子类。本例中 创建一个DYSDog的子类DYSDog_myAspect
     NSString *className = NSStringFromClass([self class]);
@@ -105,8 +133,29 @@
     Class baseClass = object_getClass(self);
     //Creates a new class and metaclass.
     //The new class, or Nil if the class could not be created (for example, the desired name is already in use).
-    objc_allocateClassPair(baseClass, subClassName, 0);
+    
+    //[DYSDog specie]
+    // baseClass 是一个class 执行类方法
+//    NSLog(@"类方法");
+//    [baseClass performSelector:@selector(specie)];
+    // self 是一个object 执行对象方法
+//    NSLog(@"对象方法");
+//    [self performSelector:selector];
+//    [self performSelector:@selector(learnRunning)];
+    
+    subClass = objc_allocateClassPair(baseClass, subClassName, 0);
+//    NSLog(@"子类%s执行类方法",subClassName);
+//    [subClass performSelector:@selector(specie)];
 
+    
+    
+    IMP originSelectorImp = class_getMethodImplementation([self class], selector);
+    NSString *originSelector = [NSStringFromSelector(selector) stringByAppendingString:@"_myAspect"];
+
+    class_addMethod(subClass, NSSelectorFromString(originSelector), originSelectorImp, "v@:@");
+
+    
+    
     /**
      * class_replaceMethod
      * Replaces the implementation of a method for a given class.
@@ -126,13 +175,51 @@
     if (originalImplementation) {
         class_addMethod(subClass, NSSelectorFromString(@"DYSAspectsForwardInvocationSelectorName"), originalImplementation, "v@:@");
     }
+    
+    //对象self的isa指针指向subClass。 将对应的对象isa指针指向创建的子类
+    //object_setClass(id _Nullable obj, Class _Nonnull cls)
+    object_setClass(self, subClass);
+
+    
+    /**
+     Replaces the implementation of a method for a given class.
+     class_replaceMethod(Class _Nullable cls, SEL _Nonnull name, IMP _Nonnull imp,
+     const char * _Nullable types)
+     */
+    // selector 直接指向了forwardInvocation
+    class_replaceMethod(subClass, selector, _objc_msgForward, "v@:@");
+    
+    
 }
 
 // This is the swizzled forwardInvocation: method.
 static void __ASPECTS_ARE_BEING_CALLED__(__unsafe_unretained NSObject *self, SEL selector, NSInvocation *invocation) {
 
-
-
+    NSLog(@"进入 forwardInvocation 的自定义imp");
+    NSLog(@"invocation.selector:%s",invocation.selector);
+    NSLog(@"invocation.target:%@",[invocation.target class]);
+    /**
+     2019-04-04 14:29:22.263186+0800 Aspects_Brief[77353:2416907] 对象开始---
+     2019-04-04 14:29:22.263398+0800 Aspects_Brief[77353:2416907] 进入 forwardInvocation 的自定义imp
+     2019-04-04 14:29:22.263501+0800 Aspects_Brief[77353:2416907] invocation.selector:learnRunning
+     2019-04-04 14:29:22.263611+0800 Aspects_Brief[77353:2416907] invocation.target:DYSDog_myAspect
+     2019-04-04 14:29:22.263702+0800 Aspects_Brief[77353:2416907] 对象结束---
+     
+     由log可见，我们执行的是[[DYSDog new] learnRunning],后面转到了 [[DYSDog_myAspect new] learnRunning]
+     */
+    
+    NSLog(@"selector:%s",selector);
+    NSLog(@"self:%s",[self class]);
+    /*
+     2019-04-04 14:32:46.672146+0800 Aspects_Brief[77440:2424297] selector:forwardInvocation:
+     2019-04-04 14:32:46.672225+0800 Aspects_Brief[77440:2424297] self:@Eg\^B
+     */
+    
+    //执行原来的方法  learnRunning_myAspect    
+    NSString *originSelector = [NSStringFromSelector(invocation.selector) stringByAppendingString:@"_myAspect"];
+    [invocation.target performSelector:NSSelectorFromString(originSelector)];
+    
+    
 }
 
 
