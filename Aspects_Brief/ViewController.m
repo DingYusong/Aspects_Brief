@@ -30,14 +30,28 @@
 //    NSLog(@"类结束---");
     
     DYSDog *dog = [DYSDog new];
+
+//    [dog dysAspect_hookSelector:@selector(learnRunning) withOptions:DYSSimpleAspectOptionAfter usingBlock:^(){
+//        NSLog(@"AspectOptionAfter：参加奥运会");
+//    } error:nil];
+
     
-    [dog dysAspect_hookSelector:@selector(learnRunning) withOptions:DYSSimpleAspectOptionBefore usingBlock:^(){
-        NSLog(@"先学会走");
+    [DYSDog dysAspect_hookSelector:@selector(learnRunning) withOptions:DYSSimpleAspectOptionBefore usingBlock:^(){
+        NSLog(@"AspectOptionBefore：先学会走");
     } error:nil];
     
     NSLog(@"对象开始---");
     [dog learnRunning];
     NSLog(@"对象结束---");
 }
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    DYSDog *dog = [DYSDog new];
+    [dog learnRunning];
+
+}
+
 
 @end
