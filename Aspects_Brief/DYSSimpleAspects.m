@@ -70,183 +70,26 @@ typedef void (^AspectBlock)(void);
                 withOptions:(DYSSimpleAspectOption)options
                  usingBlock:(id)block
                       error:(NSError **)error {
-    //1.保存原来的方法。
-    //2.老方法的IMP指针指向新方法。
-    //3.根据Option调用新方法和老方法
-    
-    
-    //将class DYSDog的selector ： specie 的imp指针指向
-    
-    
-    //1. 动态创建子类。
-    //本例中 动态创建一个DYSDog的子类DYSDog_myAspect
-    
-    //DYSDog
-//    NSString *className = NSStringFromClass([self class]);
-    
-    //    NSString *subClassName = [className stringByAppendingString:@"_myAspect"];
-    //    Class subClass = objc_getClass(subClassName.UTF8String);
-    
-    //DYSDog_myAspect
-//    const char *subClassName = [className stringByAppendingString:@"_myAspect"].UTF8String;
-    
-    //The Class object for the named class, or \c nil
-    //*  if the class is not registered with the Objective-C runtime.
-    //DYSDog_myAspect 目前还是nil
-//    Class subClass = objc_getClass(subClassName);
-    
-    
-    
-    /**
-     * objc_allocateClassPair
-     * Creates a new class and metaclass.
-     *
-     * @para superclass The class to use as the new class's superclass, or \c Nil to create a new root class.
-     * @para name The string to use as the new class's name. The string will be copied.
-     * @para extraBytes The number of bytes to allocate for indexed ivars at the end of
-     *  the class and metaclass objects. This should usually be \c 0.
-     */
-    
-    //获得类,成功创建子类
-    
-    //DYSDog 类对象
-    //Class baseClass = object_getClass(self);
-    //类方法，本身就是类对象
-    
-    //[DYSDog specie]
-//    [self performSelector:selector];
-    
-    //Creates a new class and metaclass.
-    //The new class, or Nil if the class could not be created (for example, the desired name is already in use).
-    //
-//    objc_allocateClassPair(self, subClassName, 0);
-    
-    /**
-     * class_replaceMethod
-     * Replaces the implementation of a method for a given class.
-     *
-     * @para cls The class you want to modify.
-     * @para name A selector that identifies the method whose implementation you want to replace.
-     * @para imp The new implementation for the method identified by name for the class identified by cls.
-     * @para types An array of characters that describe the types of the arguments to the method.
-     *  Since the function must take at least two arguments—self and _cmd, the second and third characters
-     *  must be “@:” (the first character is the return type).
-     *
-     * @ret The previous implementation of the method identified by \e name for the class identified by \e cls.
-     */
-    
-    //将subClass的forwardInvocation指向新的imp，并将老的forwardInvocation的imp指针赋值给新的selector，实现备份。
-//    IMP originalImplementation = class_replaceMethod(subClass, @selector(forwardInvocation:), (IMP)__ASPECTS_ARE_BEING_CALLED__, "v@:@");
-//    if (originalImplementation) {
-//        class_addMethod(subClass, NSSelectorFromString(@"DYSAspectsForwardInvocationSelectorName"), originalImplementation, "v@:@");
-//    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //1.保存原来的方法。
-    //2.老方法的IMP指针指向新方法。
-    //3.根据Option调用新方法和老方法
-    
-    /**
-     获得method的imp指针：class_getMethodImplementation
-     Returns the function pointer that would be called if a
-     particular message were sent to an instance of a class.
-     */
-    //获得 selector的imp
-    
-    
-    
-    
-    //创建子类。本例中 创建一个DYSDog的子类DYSDog_myAspect
-    NSString *className = NSStringFromClass([self class]);
-    //    NSString *subClassName = [className stringByAppendingString:@"_myAspect"];
-    //    Class subClass = objc_getClass(subClassName.UTF8String);
-    const char *subClassName = [className stringByAppendingString:@"_myAspect"].UTF8String;
-    
-    //The Class object for the named class, or \c nil
-    //*  if the class is not registered with the Objective-C runtime.
-    Class subClass = objc_getClass(subClassName);
-    
-    
-    
-    /**
-     * objc_allocateClassPair
-     * Creates a new class and metaclass.
-     *
-     * @para superclass The class to use as the new class's superclass, or \c Nil to create a new root class.
-     * @para name The string to use as the new class's name. The string will be copied.
-     * @para extraBytes The number of bytes to allocate for indexed ivars at the end of
-     *  the class and metaclass objects. This should usually be \c 0.
-     */
-    
-    //获得类,成功创建子类
-    Class baseClass = object_getClass(self);
-    //Creates a new class and metaclass.
-    //The new class, or Nil if the class could not be created (for example, the desired name is already in use).
-    
-    //[DYSDog specie]
-    // baseClass 是一个class 执行类方法
-    //    NSLog(@"类方法");
-    //    [baseClass performSelector:@selector(specie)];
-    // self 是一个object 执行对象方法
-    //    NSLog(@"对象方法");
-    //    [self performSelector:selector];
-    //    [self performSelector:@selector(learnRunning)];
-    
-    subClass = objc_allocateClassPair(baseClass, subClassName, 0);
-    //    NSLog(@"子类%s执行类方法",subClassName);
-    //    [subClass performSelector:@selector(specie)];
-    
-    
-    
+    // 1. 获得要hook方法的IMP
     IMP originSelectorImp = class_getMethodImplementation([self class], selector);
+    
+    // 2. 保存要hook的方法，方便调用
     NSString *originSelector = [NSStringFromSelector(selector) stringByAppendingString:@"_myAspect"];
+    class_addMethod(self, NSSelectorFromString(originSelector), originSelectorImp, "v@:@");
     
-    class_addMethod(subClass, NSSelectorFromString(originSelector), originSelectorImp, "v@:@");
-    
-    
-    
-    /**
-     * class_replaceMethod
-     * Replaces the implementation of a method for a given class.
-     *
-     * @para cls The class you want to modify.
-     * @para name A selector that identifies the method whose implementation you want to replace.
-     * @para imp The new implementation for the method identified by name for the class identified by cls.
-     * @para types An array of characters that describe the types of the arguments to the method.
-     *  Since the function must take at least two arguments—self and _cmd, the second and third characters
-     *  must be “@:” (the first character is the return type).
-     *
-     * @ret The previous implementation of the method identified by \e name for the class identified by \e cls.
-     */
-    
-    //将subClass的forwardInvocation指向新的imp，并将老的forwardInvocation的imp指针赋值给新的selector，实现备份。
-    IMP originalImplementation = class_replaceMethod(subClass, @selector(forwardInvocation:), (IMP)__ASPECTS_ARE_BEING_CALLED__, "v@:@");
+    //3.将forwardInvocation指向新的imp，并将老的forwardInvocation的imp指针赋值给新的selector，实现备份。方便对hook方法的处理。
+    IMP originalImplementation = class_replaceMethod(self, @selector(forwardInvocation:), (IMP)__ASPECTS_ARE_BEING__, "v@:@");
     if (originalImplementation) {
-        class_addMethod(subClass, NSSelectorFromString(@"DYSAspectsForwardInvocationSelectorName"), originalImplementation, "v@:@");
+        class_addMethod(self, NSSelectorFromString(@"DYSAspectsForwardInvocationSelectorName"), originalImplementation, "v@:@");
     }
     
-    //对象self的isa指针指向subClass。 将对应的对象isa指针指向创建的子类
-    //object_setClass(id _Nullable obj, Class _Nonnull cls)
-    object_setClass(self, subClass);
-    
+    //4. 待hook的selector直接指向了forwardInvocation
+    class_replaceMethod(self, selector, _objc_msgForward, "v@:@");
     
     /**
-     Replaces the implementation of a method for a given class.
-     class_replaceMethod(Class _Nullable cls, SEL _Nonnull name, IMP _Nonnull imp,
-     const char * _Nullable types)
+     5. 通过AssociatedObject保存待hook信息。
+        方便取出。key和selector相关联。
      */
-    // selector 直接指向了forwardInvocation
-    class_replaceMethod(subClass, selector, _objc_msgForward, "v@:@");
-    
-    
-    
     AspectIdentifier *identify = [AspectIdentifier identifierWithSelector:selector object:self options:options block:block error:nil];
     
     AspectsContainer *container = [AspectsContainer new];
@@ -254,8 +97,6 @@ typedef void (^AspectBlock)(void);
     
     //一个方法建立一个AspectsContainer,一个block建立一个AspectIdentifier，container可以包含多个indetifier。
     objc_setAssociatedObject(self, NSSelectorFromString([@"aspect" stringByAppendingFormat:@"_%@", NSStringFromSelector(selector)]), container, OBJC_ASSOCIATION_RETAIN);
-
-
 }
 
 - (void)dysAspect_hookSelector:(SEL)selector
@@ -393,33 +234,51 @@ static void __ASPECTS_ARE_BEING_CALLED__(__unsafe_unretained NSObject *self, SEL
      2019-04-04 14:32:46.672225+0800 Aspects_Brief[77440:2424297] self:@Eg\^B
      */
     
-    
-    
     NSString *conatinername = [@"aspect" stringByAppendingFormat:@"_%@", NSStringFromSelector(invocation.selector)];
-    
     
     NSString *oricls = [NSStringFromClass([invocation.target class]) substringToIndex:6];
     
-    
-    
     AspectsContainer *container = objc_getAssociatedObject(self, NSSelectorFromString(conatinername));
-    
+
     for (AspectIdentifier *identity in container.beforeAspects) {
         identity.block();
-//        NSLog(@"%@",identity.block());
     }
-    
     
     //执行原来的方法  learnRunning_myAspect
     NSString *originSelector = [NSStringFromSelector(invocation.selector) stringByAppendingString:@"_myAspect"];
     [invocation.target performSelector:NSSelectorFromString(originSelector)];
 
+    for (AspectIdentifier *identity in container.afterAspects) {
+        identity.block();
+    }
+}
+
+
+
+// This is the swizzled forwardInvocation: method.
+static void __ASPECTS_ARE_BEING__(__unsafe_unretained NSObject *self, SEL selector, NSInvocation *invocation) {
+    
+//    NSLog(@"进入 forwardInvocation 的自定义imp");
+//    NSLog(@"invocation.selector:%s",invocation.selector);
+//    NSLog(@"invocation.target:%@",[invocation.target class]);
+//    NSLog(@"selector:%s",selector);
+//    NSLog(@"self:%s",[self class]);
+    
+    NSString *conatinername = [@"aspect" stringByAppendingFormat:@"_%@", NSStringFromSelector(invocation.selector)];
+    NSString *oricls = [NSStringFromClass([invocation.target class]) substringToIndex:6];
+
+    AspectsContainer *container = objc_getAssociatedObject(object_getClass(self), NSSelectorFromString(conatinername));
+    for (AspectIdentifier *identity in container.beforeAspects) {
+        identity.block();
+    }
+    //执行原来的方法  learnRunning_myAspect
+    NSString *originSelector = [NSStringFromSelector(invocation.selector) stringByAppendingString:@"_myAspect"];
+    [invocation.target performSelector:NSSelectorFromString(originSelector)];
+    
     
     for (AspectIdentifier *identity in container.afterAspects) {
         identity.block();
     }
-
-    
 }
 
 
