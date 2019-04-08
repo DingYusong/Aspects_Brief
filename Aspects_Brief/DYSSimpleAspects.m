@@ -114,9 +114,6 @@ typedef void (^AspectBlock)(void);
      */
     //获得 selector的imp
     
-    
-
-    
     //创建子类。本例中 创建一个DYSDog的子类DYSDog_myAspect
     NSString *className = NSStringFromClass([self class]);
 //    NSString *subClassName = [className stringByAppendingString:@"_myAspect"];
